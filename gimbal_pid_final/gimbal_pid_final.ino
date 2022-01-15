@@ -31,7 +31,7 @@ PID myPID_roll(&Input_roll,&Output_roll, &Setpoint_x,kp,ki,kd, DIRECT);
 PID myPID_pitch(&Input_pitch, &Output_pitch, &Setpoint_y, kp,ki,kd, DIRECT);
 /*MPU-6050 gives you 16 bits data so you have to create some float constants
 *to store the data for accelerations and gyro*/
-int home_pitch = 90;
+int home_pitch = 82;
 int home_roll = 90;
 //Gyro Variables
 float elapsedTime, time, timePrev;            //Variables for time control
@@ -66,7 +66,7 @@ void setup() {
   roll.attach(3);  //servo motor for roll
   filter.begin(30);
   
-  home_pitch = 90;                                                                                   //test this for homing
+  home_pitch = 82;                                                                                   //test this for homing
   home_roll = 90;
   pitch.write(home_pitch);
   roll.write(home_roll);
@@ -185,18 +185,18 @@ void loop() {
     
     
 ///////////////////////////////////////////////////this is for GY521 //////////////////////////////////////////////
-//    Serial.print("GyroX angle: ");
-//    Serial.print(Total_angle_x);
-//    
-//    Serial.print("   |   ");
-//    Serial.print("GyroY angle: ");
-//    Serial.print("|");
-//    Serial.print("angle:");
-//    Serial.println(Total_angle_y);
-//    roll.write(home_roll+Total_angle_x);
-//    //delay(5);
-//    pitch.write(home_pitch+Total_angle_y);
-//    //delay(5);
+    Serial.print("GyroX angle: ");
+    Serial.print(Total_angle_x);
+    
+    Serial.print("   |   ");
+    Serial.print("GyroY angle: ");
+    Serial.print("|");
+    Serial.print("angle:");
+    Serial.println(Total_angle_y);
+    roll.write(home_roll+Total_angle_x);
+    //delay(5);
+    pitch.write(home_pitch-Total_angle_y);
+    //delay(5);
 
 //    Input_roll = endocer_input;
 //    Input_pitch = encoder_input;
@@ -215,17 +215,17 @@ void loop() {
 //    pitch.write(home_pitch+Total_angle_y);
 //////////////////////////////////////////////////////////PID controller///////////////////////////////////////////////////////////
 
-    Input_roll = Total_angle_x;
-    Input_pitch = Total_angle_y;
-    myPID_roll.Compute();
-    myPID_pitch.Compute();
-    Serial.print("roll: ");
-    Serial.print(Output_roll);
-    Serial.print("   |   ");
-    Serial.print("pitch: ");
-    Serial.println(Output_pitch);
-    roll.write(home_roll+Output_roll);
-    pitch.write(home_pitch+Output_pitch);
+//    Input_roll = Total_angle_x;
+//    Input_pitch = Total_angle_y;
+//    myPID_roll.Compute();
+//    myPID_pitch.Compute();
+//    Serial.print("roll: ");
+//    Serial.print(Output_roll);
+//    Serial.print("   |   ");
+//    Serial.print("pitch: ");
+//    Serial.println(Output_pitch);
+//    roll.write(home_roll-Output_roll);
+//    pitch.write(home_pitch+Output_pitch);
     
     
 
