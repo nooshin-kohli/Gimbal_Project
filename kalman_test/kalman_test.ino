@@ -26,11 +26,15 @@
  */
 #include <Wire.h>
 #include <Kalman.h> // Source: https://github.com/TKJElectronics/KalmanFilter
+#include <Servo.h>
+#include <MadgwickAHRS.h> 
 
 #define RESTRICT_PITCH // Comment out to restrict roll to ±90deg instead - please read: http://www.freescale.com/files/sensors/doc/app_note/AN3461.pdf
 
 Kalman kalmanX; // Create the Kalman instances
 Kalman kalmanY;
+Servo pitch_m;
+Servo roll_m;
 
 /* IMU Data */
 double accX, accY, accZ;
@@ -94,6 +98,10 @@ uint8_t i2cRead(uint8_t registerAddress, uint8_t *data, uint8_t nbytes) {
 }
 
 void setup() {
+  pitch_m.attach(9); //servo motor for pitch
+  roll_m.attach(3);  //servo motor for roll
+  roll_m.write(83);
+  pitch_m.write(80);
   Serial.begin(115200);
   Wire.begin();
 #if ARDUINO >= 157
@@ -214,34 +222,10 @@ void loop() {
   if (gyroYangle < -180 || gyroYangle > 180)
     gyroYangle = kalAngleY;
 
-  /* Print Data */
-#if 0 // Set to 1 to activate
-//  Serial.print(accX); Serial.print("\t");
-//  Serial.print(accY); Serial.print("\t");
-//  Serial.print(accZ); Serial.print("\t");
-//
-//  Serial.print(gyroX); Serial.print("\t");
-//  Serial.print(gyroY); Serial.print("\t");
-//  Serial.print(gyroZ); Serial.print("\t");
-
-//  Serial.print("\t");
-#endif
-
-//  Serial.print(roll); Serial.print("\t");
-//  Serial.print(gyroXangle); Serial.print("\t");
-  Serial.print("c:");Serial.print(compAngleX); Serial.print(", ");
   Serial.print("k:");Serial.print(kalAngleX); Serial.print(", ");
-  Serial.println();
-
-//  Serial.print("\t");
-
-//  Serial.print(pitch); Serial.print("\t");
-//  Serial.print(gyroYangle); Serial.print("\t");
-//  Serial.print("compFILTER: ");
-//  Serial.print(compAngleY); Serial.print("\t");
-//  Serial.print(" | ");
-//  Serial.print("KalmanFILTER: ");
-//  Serial.print(kalAngleY); Serial.print("\t");
+  roll_m.write(88+kalAngleX);
+  Serial.print(kalAngleY); Serial.print("\t");
+  pitch_m.write(80-kalAngleY);
 
 #if 0 // Set to 1 to print the temperature
 //  Serial.print("\t");
@@ -251,5 +235,5 @@ void loop() {
 #endif
 
 //  Serial.print("\r\n");
-  delay(2);
+//  delay(2);
 }

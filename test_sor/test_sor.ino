@@ -16,8 +16,8 @@
 #include <PID_v1.h>
 
 double Input_roll,Input_pitch, Output_roll, Output_pitch;
-double kp=1.5;//3.55
-double ki=0.01;//0.01;//0.0
+double kp=1.15;//3.55
+double ki=0.01;//0.01;//0.003
 double kd=0.01;//0.01;//2.05
 double Setpoint_x=0;
 double Setpoint_y=0;
@@ -25,14 +25,13 @@ double Setpoint_y=0;
 // we have two servos ==>> two objects 
 Servo pitch;
 Servo roll;
-Madgwick filter;
-MPU6050 mpu(Wire);
 PID myPID_roll(&Input_roll,&Output_roll, &Setpoint_x,kp,ki,kd, DIRECT);
 PID myPID_pitch(&Input_pitch, &Output_pitch, &Setpoint_y, kp,ki,kd, DIRECT);
+
 /*MPU-6050 gives you 16 bits data so you have to create some float constants
 *to store the data for accelerations and gyro*/
-int home_pitch = 88;
-int home_roll = 80;
+int home_pitch = 90;
+int home_roll = 90;
 //Gyro Variables
 float elapsedTime, time, timePrev;            //Variables for time control
 int gyro_error=0;                             //We use this variable to only calculate once the gyro data error
@@ -64,20 +63,14 @@ void setup() {
     
   pitch.attach(3); //servo motor for pitch
   roll.attach(9);  //servo motor for roll
-  filter.begin(30);
   
-  home_pitch = 80;                                                                                   //test this for homing
-  home_roll = 83;
+  home_pitch = 82;                                                                                   //test this for homing
+  home_roll = 82;
   pitch.write(home_pitch);
   roll.write(home_roll);
 
   Serial.begin(9600);    //Remember to set this same baud rate to the serial monitor
   Wire.begin();
-//  byte status = mpu.begin();
-//  Serial.println(F("Calculating offsets, do not move MPU6050"));
-//  delay(1000);
-////  mpu.calcOffsets();
-//  Serial.println("DONE!!");
       
   //begin the wire comunication
   Wire.beginTransmission(0x68);           //begin, Send the slave adress (in this case 68)              
@@ -137,22 +130,11 @@ void loop() {
   Gyro_angle_x = Gyr_rawX*elapsedTime;
   /*---Y---*/
   Gyro_angle_y = Gyr_rawY*elapsedTime;
-
-
-    
-  
   //////////////////////////////////////Acc read/////////////////////////////////////
   Wire.beginTransmission(0x68);     //begin, Send the slave adress (in this case 68) 
   Wire.write(0x3B);                 //Ask for the 0x3B register- correspond to AcX
   Wire.endTransmission(false);      //keep the transmission and next
-  Wire.requestFrom(0x68,6,true);    //We ask for next 6 registers starting with the 3B  
-  /*We have asked for the 0x3B register. The IMU will send a brust of register.
-  * The amount of register to read is specify in the requestFrom function.
-  * In this case we request 6 registers. Each value of acceleration is made out of
-  * two 8bits registers, low values and high values. For that we request the 6 of them  
-  * and just make then sum of each pair. For that we shift to the left the high values 
-  * register (<<) and make an or (|) operation to add the low values.
-  If we read the datasheet, for a range of+-8g, we have to divide the raw values by 4096*/    
+  Wire.requestFrom(0x68,6,true);    //We ask for next 6 registers starting with the 3B    
   Acc_rawX=(Wire.read()<<8|Wire.read())/4096.0 ; //each value needs two registres                                     
   Acc_rawY=(Wire.read()<<8|Wire.read())/4096.0 ;
   Acc_rawZ=(Wire.read()<<8|Wire.read())/4096.0 ; 
@@ -163,20 +145,6 @@ void loop() {
  /*---Y---*/
  Acc_angle_y = (atan(-1*(Acc_rawX)/sqrt(pow((Acc_rawY),2) + pow((Acc_rawZ),2)))*rad_to_deg) ;   
 
- filter.updateIMU(Gyr_rawX,Gyr_rawY,Gyr_rawZ,Acc_rawX,Acc_rawY,Acc_rawZ);
- roll_angle = filter.getRoll();
- pitch_angle = filter.getPitch();
- Serial.print("pitch: ");
- Serial.print(pitch_angle);
- Serial.print(" |roll:  ");
- Serial.println(roll_angle);
- roll.write(home_roll-roll_angle);
- pitch.write(home_pitch+pitch_angle);
- 
-
- 
-//TODO: find alpha for filter
-// kalman or complementary???
  //////////////////////////////////////Total angle and filter/////////////////////////////////////
 // this is a complementary filter
                        
@@ -185,55 +153,22 @@ void loop() {
  
  /*---Y axis angle---*/
  Total_angle_y = 0.98 *(Total_angle_y + Gyro_angle_y) + 0.02*Acc_angle_y;
-
-// Serial.println(Total_angle_x);
-// roll.write(home_roll+Total_angle_x);
     
     
 ///////////////////////////////////////////////////this is for GY521 //////////////////////////////////////////////
-//    Serial.print("GyroX angle: ");
-//    Serial.print(Total_angle_x);
-//    
-//    Serial.print("   |   ");
-//    Serial.print("GyroY angle: ");
-//    Serial.print("|");
-//    Serial.print("angle:");
-//    Serial.println(Total_angle_y);
-//    roll.write(home_roll+Total_angle_x);
-//    //delay(5);
-//    pitch.write(home_pitch-Total_angle_y);
-//    //delay(5);
 
-//    Input_roll = endocer_input;
-//    Input_pitch = encoder_input;
-//    Setpoint_x = Total_angle_x;
-//    Setpoint_y = Total_angle_y;
-//    myPID_roll.Compute();
-//    Serial.println(Output_roll);
-//    myPID_pitch.Compute();
-//    Serial.println(Output_pitch);
-
-//    roll.write(home_roll+Output_roll);
-
-//    pitch.write(home_pitch+Output_pitch);
-   
-//    roll.write(home_roll+Total_angle_x);
-//    pitch.write(home_pitch+Total_angle_y);
-//////////////////////////////////////////////////////////PID controller///////////////////////////////////////////////////////////
-
-//    Input_roll = Total_angle_x;
-//    Input_pitch = Total_angle_y;
-////    myPID_roll.Compute();
-//    myPID_pitch.Compute();
-////    Serial.print("roll: ");
-////    Serial.print(Output_roll);
-//    Serial.print("   |   ");
-//    Serial.print("pitch: ");
-//    Serial.println(Output_pitch);
-////    roll.write(home_roll-Output_roll);
-//    pitch.write(home_pitch+Output_pitch);
+    Serial.print("GyroX angle: ");
+    Serial.print(Total_angle_x);
     
-    
+    Serial.print("   |   ");
+    Serial.print("GyroY angle: ");
+    Serial.print("|");
+    Serial.print("angle:");
+    Serial.println(Total_angle_y);
+    roll.write(home_roll+Total_angle_x);
+    //delay(5);
+    pitch.write(home_pitch-Total_angle_y);
+
 
     
     
