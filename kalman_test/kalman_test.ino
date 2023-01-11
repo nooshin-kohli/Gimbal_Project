@@ -222,9 +222,10 @@ void loop() {
   if (gyroYangle < -180 || gyroYangle > 180)
     gyroYangle = kalAngleY;
 
-  Serial.print("k:");Serial.print(kalAngleX); Serial.print(", ");
+  Serial.print("X:");Serial.print(kalAngleX);Serial.print(", ");
   roll_m.write(88+kalAngleX);
-  Serial.print(kalAngleY); Serial.print("\t");
+  Serial.print("Y:");
+  Serial.println(kalAngleY); //Serial.print("\t");
   pitch_m.write(80-kalAngleY);
 
 #if 0 // Set to 1 to print the temperature

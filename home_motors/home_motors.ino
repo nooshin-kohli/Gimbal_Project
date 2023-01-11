@@ -13,7 +13,7 @@ void setup() {
 }
 
 void loop() {
-  myservo.write(82);
+  myservo.write(90);
 //    myservo.write(90);
   myservo_t.write(82);
 }

@@ -2,7 +2,7 @@
 const int MPU_addr_1 = 0x68; // I2C address of the first MPU-6050
 const int MPU_addr_2 = 0x69; // I2C address of the second MPU-6050
 int16_t AcX1, AcY1, AcZ1, Tmp1, AcX2, AcY2, AcZ2, Tmp2; // definition of variables
-
+double Acc_angle_x,Acc_angle_y;
 
 void setup() {
   Wire.begin();
@@ -38,6 +38,7 @@ void loop() {
   float AcZ2 = Wire.read() << 8 | Wire.read(); // 0x3F (ACCEL_ZOUT_H) & 0x40 (ACCEL_ZOUT_L)
   Tmp2 = Wire.read() << 8 | Wire.read(); // 0x41 (TEMP_OUT_H) & 0x42 (TEMP_OUT_L)
 
+  Serial.print("IMU_one: ");
   Serial.print(AcX1 / 16384);
   Serial.print(" "); 
   Serial.print(AcY1 / 16384);
@@ -46,6 +47,7 @@ void loop() {
   Serial.print(" ");
   Serial.print(Tmp1 / 340.00 + 36.53);
   Serial.print(" ");
+  Serial.print("IMU_two: ");
   Serial.print(AcX2 / 16384);
   Serial.print(" "); 
   Serial.print(AcY2 / 16384);
@@ -53,5 +55,8 @@ void loop() {
   Serial.print(AcZ2 / 16384);
   Serial.print(" ");
   Serial.println(Tmp2 / 340.00 + 36.53);
-  delay(500);
+//  Acc_angle_x = (atan((Acc_rawY)/sqrt(pow((Acc_rawX),2) + pow((Acc_rawZ),2)))*rad_to_deg) ;
+// /*---Y---*/
+//  Acc_angle_y = (atan(-1*(Acc_rawX)/sqrt(pow((Acc_rawY),2) + pow((Acc_rawZ),2)))*rad_to_deg) ;
+//  delay(500);
 }

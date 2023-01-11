@@ -31,8 +31,8 @@ PID myPID_roll(&Input_roll,&Output_roll, &Setpoint_x,kp,ki,kd, DIRECT);
 PID myPID_pitch(&Input_pitch, &Output_pitch, &Setpoint_y, kp,ki,kd, DIRECT);
 /*MPU-6050 gives you 16 bits data so you have to create some float constants
 *to store the data for accelerations and gyro*/
-int home_pitch = 88;
-int home_roll = 80;
+int home_pitch = 82;
+int home_roll = 82;
 //Gyro Variables
 float elapsedTime, time, timePrev;            //Variables for time control
 int gyro_error=0;                             //We use this variable to only calculate once the gyro data error
@@ -62,12 +62,12 @@ void setup() {
   myPID_roll.SetOutputLimits(-90,90);
   myPID_pitch.SetOutputLimits(-90,90);
     
-  pitch.attach(3); //servo motor for pitch
+  pitch.attach(5); //servo motor for pitch
   roll.attach(9);  //servo motor for roll
   filter.begin(30);
   
-  home_pitch = 80;                                                                                   //test this for homing
-  home_roll = 83;
+  home_pitch = 82;                                                                                   //test this for homing
+  home_roll = 85;
   pitch.write(home_pitch);
   roll.write(home_roll);
 
@@ -161,49 +161,64 @@ void loop() {
  /*---X---*/
  Acc_angle_x = (atan((Acc_rawY)/sqrt(pow((Acc_rawX),2) + pow((Acc_rawZ),2)))*rad_to_deg) ;
  /*---Y---*/
- Acc_angle_y = (atan(-1*(Acc_rawX)/sqrt(pow((Acc_rawY),2) + pow((Acc_rawZ),2)))*rad_to_deg) ;   
-
- filter.updateIMU(Gyr_rawX,Gyr_rawY,Gyr_rawZ,Acc_rawX,Acc_rawY,Acc_rawZ);
- roll_angle = filter.getRoll();
- pitch_angle = filter.getPitch();
- Serial.print("pitch: ");
- Serial.print(pitch_angle);
- Serial.print(" |roll:  ");
- Serial.println(roll_angle);
- roll.write(home_roll-roll_angle);
- pitch.write(home_pitch+pitch_angle);
+ Acc_angle_y = (atan(-1*(Acc_rawX)/sqrt(pow((Acc_rawY),2) + pow((Acc_rawZ),2)))*rad_to_deg) ;  
+  
+///////////////////////////////////////////////////////// madgwick ////////////////////////////////////////////////////
+// filter.updateIMU(Gyr_rawX,Gyr_rawY,Gyr_rawZ,Acc_rawX,Acc_rawY,Acc_rawZ);
+// roll_angle = filter.getRoll();
+// pitch_angle = filter.getPitch();
+// Serial.print("pitch: ");
+// Serial.print(pitch_angle);
+// Serial.print(" |roll:  ");
+// Serial.println(roll_angle);
+// roll.write(home_roll-roll_angle);
+// pitch.write(home_pitch+pitch_angle);
  
 
- 
-//TODO: find alpha for filter
-// kalman or complementary???
- //////////////////////////////////////Total angle and filter/////////////////////////////////////
-// this is a complementary filter
+//////////////////////////////////////////// this is a complementary filter /////////////////////////////////////////
                        
  /*---X axis angle---*/
  Total_angle_x = 0.98 *(Total_angle_x + Gyro_angle_x) + 0.02*Acc_angle_x;
+// Total_angle_x = Total_angle_x+16;
+ 
+ 
  
  /*---Y axis angle---*/
  Total_angle_y = 0.98 *(Total_angle_y + Gyro_angle_y) + 0.02*Acc_angle_y;
+// Total_angle_y = Total_angle_y+6;
 
 // Serial.println(Total_angle_x);
 // roll.write(home_roll+Total_angle_x);
     
+    Serial.print("GyroX angle: ");
+    Serial.print(Total_angle_x+15);
     
-///////////////////////////////////////////////////this is for GY521 //////////////////////////////////////////////
-//    Serial.print("GyroX angle: ");
-//    Serial.print(Total_angle_x);
-//    
-//    Serial.print("   |   ");
-//    Serial.print("GyroY angle: ");
-//    Serial.print("|");
-//    Serial.print("angle:");
-//    Serial.println(Total_angle_y);
-//    roll.write(home_roll+Total_angle_x);
-//    //delay(5);
-//    pitch.write(home_pitch-Total_angle_y);
-//    //delay(5);
+    Serial.print("   |   ");
+    Serial.print("GyroY angle: ");
+    Serial.print("|");
+    Serial.print("angle:");
+    Serial.println(Total_angle_y+7);
+    roll.write(home_roll+Total_angle_x+15);
+    //delay(5);
+    pitch.write(home_pitch-Total_angle_y-7);
+//    delay(5);
 
+
+//////////////////////////////////////////////////////////PID controller///////////////////////////////////////////////////////////
+
+//    Input_roll = Total_angle_x;
+//    Input_pitch = Total_angle_y;
+////    myPID_roll.Compute();
+//    myPID_pitch.Compute();
+////    Serial.print("roll: ");
+////    Serial.print(Output_roll);
+//    Serial.print("   |   ");
+//    Serial.print("pitch: ");
+//    Serial.println(Output_pitch);
+////    roll.write(home_roll-Output_roll);
+//    pitch.write(home_pitch+Output_pitch);
+    
+//    if encoder is used: 
 //    Input_roll = endocer_input;
 //    Input_pitch = encoder_input;
 //    Setpoint_x = Total_angle_x;
@@ -219,22 +234,6 @@ void loop() {
    
 //    roll.write(home_roll+Total_angle_x);
 //    pitch.write(home_pitch+Total_angle_y);
-//////////////////////////////////////////////////////////PID controller///////////////////////////////////////////////////////////
-
-//    Input_roll = Total_angle_x;
-//    Input_pitch = Total_angle_y;
-////    myPID_roll.Compute();
-//    myPID_pitch.Compute();
-////    Serial.print("roll: ");
-////    Serial.print(Output_roll);
-//    Serial.print("   |   ");
-//    Serial.print("pitch: ");
-//    Serial.println(Output_pitch);
-////    roll.write(home_roll-Output_roll);
-//    pitch.write(home_pitch+Output_pitch);
-    
-    
-
     
     
 
